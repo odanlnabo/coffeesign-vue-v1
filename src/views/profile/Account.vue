@@ -7,8 +7,8 @@
         <div class="user-happy">
           <img :src="selected_avatar" class="clickable-icon" v-on:click="changeAvatar()"/>
           <div class="ml-3">
-            <div class="user-name">Suzanne Thompson</div>
-            <span class="comments"></span>
+            <div class="user-name">{{ getName }}</div>
+            <span class="comments">{{ getEmail }}</span>
             <div>
               <b-button variant="link" class="p-0 mt-3" v-on:click="changePassword()">Change Password</b-button>
             </div>
@@ -267,7 +267,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import VueCropper from 'vue-cropperjs';
 
 import UserIcon from "../../components/UserIcon";
@@ -282,13 +282,17 @@ export default {
     UserSelect,
     VueCropper
   },
-  computed: {
-    ...mapGetters('user', [
-      'user',
-    ]),
+  computed: {    
+    getName() {
+      return this.$store.state.auth.user.name
+    },
+    getEmail() {
+      return this.$store.state.auth.user.email
+    }
   },
   data() {
     return {
+      currUser: {},
       cropped: null,
       avatars: [
         "img/avatars/scott@3x.png",
@@ -312,7 +316,7 @@ export default {
       }
     };
   },
-  methods: {    
+  methods: {  
     changeAvatarImg() {
       this.$refs.avatar_file.click();
     },

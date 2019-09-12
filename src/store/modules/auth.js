@@ -2,11 +2,11 @@ import axios from 'axios';
 
 axios.defaults.baseURL = 'http://desktop-b8avdn9/api';
 axios.defaults.headers.common['Accept'] = "application/json";
-axios.defaults.headers.common['Authorization'] = "";
+axios.defaults.headers.common['Authorization'] = "Bearer " + localStorage.getItem('access_token');
 
 const state = {
-  token: localStorage.getItem('access_token') || null,
-  authentication: localStorage.getItem('authentication') || null,
+  token: localStorage.getItem('access_token'),
+  authentication: localStorage.getItem('authentication'),
   user: {},
 };
 
@@ -19,42 +19,33 @@ const getters = {
 
 const actions = {
   // Login Request
-  retrieveToken(context, credentials) {   
+  async retrieveToken(context, credentials) {   
     // Login Success 
-    function retrieveUser(context){
-      return new Promise((resolve, reject) => {
-        axios.get('/user')
-          .then(response => {
-            context.commit('retrieveUser', response.data)
-            console.log(response.data)
-            resolve(response.data)
-          })
-          .catch(error => {
-            console.log(error)
-            reject(error)
-          })
-      })
-    }
-
-    return new Promise((resolve, reject) => {
-      axios.post('/auth/login', credentials)
+    async function retrieveUser(context){
+      await axios.get('/user')
         .then(response => {
-          const token = response.data.access_token;
-
-          localStorage.setItem('access_token', token);
-          context.commit('retrieveToken', token);
-
-          retrieveUser(context);
-
-          console.log(response.data);
-          resolve(response.data);
+          context.commit('retrieveUser', response.data)
+          console.log(response.data)
         })
         .catch(error => {
-          console.log(error);
-          reject(error);
+          console.log(error)
         })
-    })
+    }
 
+    await axios.post('/auth/login', credentials)
+      .then(response => {
+        const token = response.data.access_token;
+
+        localStorage.setItem('access_token', token);
+        context.commit('retrieveToken', token);
+
+        retrieveUser(context);
+
+        console.log(response.data);
+      })
+      .catch(error => {
+        console.log(error);
+      })
   },
 
   // Logout

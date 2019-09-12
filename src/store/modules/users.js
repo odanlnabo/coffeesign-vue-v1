@@ -10,36 +10,36 @@ const getters = {
 
 const actions = {
   // Create
-  async signupUser({ commit }, forms) {
-    const response = await axios.post();
+  // async signupUser({ commit }, forms) {
+  //   const response = await axios.post('/auth/user');
 
-    commit('newUser', response.data);
-  },
+  //   commit('newUser', response.data);
+  // },
 
   // Fetch List
   async fetchUsers({ commit }) {
-    const response = await axios.get();
+    const response = await axios.get('/auth/user');
 
     commit('fetchUsers', response.data);
   },
 
   // Fetch ID
   async fetchUser({ commit }, id) {
-    const response = await axios.get();
+    const response = await axios.get(`/auth/user/${id}`);
 
     commit('fetchUser', response.data);
   },
 
   // Update ID
   async updateUser({ commit }, id) {
-    const response = await axios.put('api/user');
+    const response = await axios.put(`/auth/user/${id}`);
 
     commit('updateUser', response.data);
   },
 
   // Delete ID
   async inactiveUser({ commit }, id) {
-    const response = await axios.delete();
+    const response = await axios.delete(`/auth/user/${id}`);
 
     commit('inactiveUser', id);
   }
