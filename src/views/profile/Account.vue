@@ -196,6 +196,7 @@
                 placeholder="Current Password*"
                 name="cur_pwd"
                 required
+                v-model="cur_pwd"
                 :type="showOldPwd ? 'text' : 'password'"
               />
               <i class="fa fa-eye clickable-icon ml-3" v-on:click="showOldPwd = !showOldPwd"/>
@@ -209,6 +210,7 @@
                 placeholder="New Password*"
                 name="new_pwd"
                 required
+                v-model="new_pwd"
                 :type="showNewPwd ? 'text' : 'password'"
                 />
                 <i class="fa fa-eye clickable-icon ml-3" v-on:click="showNewPwd = !showNewPwd"/>
@@ -222,6 +224,7 @@
                 placeholder="Confirm New Password*"
                 name="confirm_pwd"
                 required
+                v-model="confirm_pwd"
                 :type="showNewConfirm ? 'text' : 'password'"
               />
               <i class="fa fa-eye clickable-icon ml-3" v-on:click="showNewConfirm = !showNewConfirm"/>
@@ -313,6 +316,11 @@ export default {
       showOldPwd: false,
       showNewPwd: false,
       showNewConfirm: false,
+      form_password: {
+        cur_pwd: '',
+        new_pwd: '',
+        confirm_pwd: '',
+      },
       form_data: {
         error_flag: false,
         first_name: this.$store.state.auth.user.first_name,
@@ -323,47 +331,49 @@ export default {
         title: this.$store.state.clients.data.title,
         industry: "Select Industry"
       },
-      itemPurpose: ['Purpose of using', 'My Personnel use', 'My Business'],
+      itemPurpose:  ['Purpose of using', 'My Personnel use', 'My Business'],
       itemEmployee: ['Employee', '0-5', '6-10', '11-20', '21-50', '51-100', '101-300', '301-1000', 'More then 1000'],
       itemIndustry: [
-                    'Select Industry',
-                    'Accounting &amp; Tax Accounting',
-                    'Business Services / Consulting Business Services',
-                    'Construction - General Construction',
-                    'Construction - Home Builder Real Estate - Construction',
-                    'Debt Settlement Debt Settlement/Loan Modification',
-                    'Education Education',
-                    'Financial Services - Banking Banking',
-                    'Financial Services - Credit Unions Credit Unions',
-                    'Financial Services - Other Financial Services',
-                    'Financial Services - Wealth &amp; Asset Management Wealth Management',
-                    'Government - City Government - City',
-                    'Government - County Government - County',
-                    'Government - Federal Government - National',
-                    'Government - State Government - State',
-                    'Healthcare - Health Plans &amp; Payers Insurance - Health',
-                    'Healthcare - Providers Healthcare - Providers',
-                    'HR Staffing HR Staffing',
-                    'Insurance - Agents / Brokers Insurance - Agency',
-                    'Insurance - Carriers Insurance - Carriers',
-                    'Legal Legal',
-                    'Life Sciences - Medical Devices Life Sciences - Medical Devices',
-                    'Life Sciences - Other Life Sciences - Other',
-                    'Life Sciences - Pharmaceuticals Life Sciences - Pharmaceuticals',
-                    'Life Sciences - Wholesale Distributors Life Sciences - Wholesale/Distributor',
-                    'Manufacturing',
-                    'Mortgage Broker Real Estate - Mortgage',
-                    'Not For Profit',
-                    'Real Estate - Agent Real Estate - Agent',
-                    'Real Estate - Broker/Owner Real Estate - Broker/Owner',
-                    'Real Estate - Commercial Real Estate - Commercial',
-                    'Real Estate - Property Management Real Estate - Property Management',
-                    'Retail Retail',
-                    'Sports &amp; Entertainment Travel &amp; Leisure',
-                    'Technology - General Technology',
-                    'Technology - Startup Technology',
-                    'Telecommunications',
-                    'Other'],
+                      'Select Industry',
+                      'Accounting &amp; Tax Accounting',
+                      'Business Services / Consulting Business Services',
+                      'Construction - General Construction',
+                      'Construction - Home Builder Real Estate - Construction',
+                      'Debt Settlement Debt Settlement/Loan Modification',
+                      'Education Education',
+                      'Financial Services - Banking Banking',
+                      'Financial Services - Credit Unions Credit Unions',
+                      'Financial Services - Other Financial Services',
+
+                      // 'Financial Services - Wealth &amp; Asset Management Wealth Management',
+                      // 'Government - City Government - City',
+                      // 'Government - County Government - County',
+                      // 'Government - Federal Government - National',
+                      // 'Government - State Government - State',
+                      // 'Healthcare - Health Plans &amp; Payers Insurance - Health',
+                      // 'Healthcare - Providers Healthcare - Providers',
+                      // 'HR Staffing HR Staffing',
+                      // 'Insurance - Agents / Brokers Insurance - Agency',
+                      // 'Insurance - Carriers Insurance - Carriers',
+                      // 'Legal Legal',
+                      // 'Life Sciences - Medical Devices Life Sciences - Medical Devices',
+                      // 'Life Sciences - Other Life Sciences - Other',
+                      // 'Life Sciences - Pharmaceuticals Life Sciences - Pharmaceuticals',
+                      // 'Life Sciences - Wholesale Distributors Life Sciences - Wholesale/Distributor',
+                      // 'Manufacturing',
+                      // 'Mortgage Broker Real Estate - Mortgage',
+                      // 'Not For Profit',
+                      // 'Real Estate - Agent Real Estate - Agent',
+                      // 'Real Estate - Broker/Owner Real Estate - Broker/Owner',
+                      // 'Real Estate - Commercial Real Estate - Commercial',
+                      // 'Real Estate - Property Management Real Estate - Property Management',
+                      // 'Retail Retail',
+                      // 'Sports &amp; Entertainment Travel &amp; Leisure',
+                      // 'Technology - General Technology',
+                      // 'Technology - Startup Technology',
+                      // 'Telecommunications',
+                      // 'Other'
+                    ],
 
     };
   },
@@ -417,6 +427,18 @@ export default {
     },
     savePassword() {
       this.$refs['change-password-modal'].hide();
+      
+      let user_id = this.$store.state.auth.user.id
+      let email = this.$store.state.auth.user.email
+      let cur_pwd = this.form_password.cur_pwd
+      let new_pwd = this.form_password.new_pwd
+      let confirm_pwd = this.form_password.confirm_pwd
+      this.$store.dispatch('updatePassword', { id: user_id, email, cur_pwd, new_pwd, confirm_pwd })
+      .then(() => {
+        this.$router.push({ name: 'LandingPage' })
+      })
+      .catch(err => console.log(err))
+
     },
     changePurposeValue(e) {
       this.form_data.purpose = e;

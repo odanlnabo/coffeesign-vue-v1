@@ -1,4 +1,5 @@
 import axios from 'axios';
+import createPersistedState from 'vuex-persistedstate'
 
 const state = {
   data: {}
@@ -125,5 +126,6 @@ export default {
   mutations,
   actions,
   getters,
+  plugins: [createPersistedState()],
 }
 

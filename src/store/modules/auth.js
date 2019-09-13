@@ -1,6 +1,8 @@
 import axios from 'axios'
+import createPersistedState from 'vuex-persistedstate'
+import config from '../../config'
 
-axios.defaults.baseURL = 'http://desktop-b8avdn9/api'
+axios.defaults.baseURL = config.BASE_URL + '/api'
 
 const state = {
   status: '',
@@ -31,6 +33,9 @@ const mutations = {
 
   update_user: function(state, msg) {
     state.status = ''
+  },
+  update_password: function(state, msg) {
+    state.status = ''
   }
 }
 
@@ -43,7 +48,7 @@ const actions = {
       .then(resp => {
         const token = resp.data.access_token
         localStorage.setItem('token', token)
-        axios.defaults.headers.common['Authorization'] = "Bearer " + token     
+        axios.defaults.headers.common['Authorization'] = "Bearer " + token
         context.commit('auth_success', token)
       })
       // Login Success
@@ -74,6 +79,20 @@ const actions = {
     })
   },
 
+  updatePassword({commit}, user) {
+    return new Promise((resolve, reject) => {
+      axios.post(`/user/${user.id}`)
+      .then(resp => {
+        commit('update_password')
+        resolve(resp)
+      })
+      .catch(err => {
+        commit('auth_error', err)
+        reject(err)
+      })
+    })
+  },
+
   logout({commit}) {
     return new Promise((resolve, reject) => {
       commit('logout')
@@ -81,6 +100,12 @@ const actions = {
       delete axios.defaults.headers.common['Authorization']
       resolve()
     })
+  },
+
+  authError({commit}, errors) {
+    localStorage.removeItem('token')
+    delete axios.defaults.headers.common['Authorization']
+    commit('auth_error', errors)
   },
 
   // Update User
@@ -108,12 +133,16 @@ const actions = {
 const getters = {
   isLoggedIn: state => !!state.token,
   authStatus: state => state.status,
-  userInfo: state => state.user
+  userInfo: state => state.user,
+
+  errors: state => state.errors,
+  button: state => state.button
 }
 
 export default {
   state,
   mutations,
   actions,
-  getters
+  getters,
+  plugins: [createPersistedState()],
 }

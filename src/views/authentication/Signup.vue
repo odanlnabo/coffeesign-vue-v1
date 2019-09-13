@@ -1,7 +1,7 @@
 <template>
   <b-container fluid class="signup auth-page">
-    <!-- <confirm></confirm>
-    <error></error> -->
+    <confirm></confirm>
+    <error></error>
 
     <b-row>
       <b-col xl="5" lg="6" md="12" sm="12" xs="12" class="signup-left">
@@ -145,10 +145,18 @@
 <script>
 import { Carousel, Slide } from 'vue-carousel'
 import AuthHeader from './AuthHeader'
+import Confirm from '../../components/signup/Confirm.modal'
+import Error from '../../components/common/Error.modal'
+
+// import { authentication } from '../../mixins/authentication'
+import axios from 'axios'
+import { Promise } from 'q';
 
 export default {
   name: "Signup",
+  // mixins: [authentication],
   components: {
+    Confirm, Error,
     Carousel,
     Slide,
     AuthHeader,
@@ -194,19 +202,146 @@ export default {
     }
   },
   methods: {
-    onSignup() {},
-    onSuccess() {},
+    onSignup() {
+      var vm = this
+      vm.form.provider_name = ''
+
+      if (!vm.validate()) {
+        return
+      }
+
+      localStorage.setItem('signup-form', JSON.stringify(vm.form))
+
+      return new Promise((resolve, reject) => {
+        axios.post('auth/signup', vm.form)
+          .then(resp => {
+            vm.onSuccess()
+          })
+          .catch(err => {
+            if (error.response.status == 422) {
+              var errors = error.response.data.errors
+                if (errors.email.length > 0) {
+                  vm.validator.email.error = true
+                  vm.validator.email.text = errors.email[0]
+                  vm.validator.email.last = vm.form.email
+                }
+              } 
+              else {
+                vm.$store.dispatch('authError', ["Failed to sign up."])
+                vm.$bvModal.show('modal-error')
+              }                
+          })
+      })
+    },
+    onSuccess() {
+      this.$bvModal.show('modal-confirm')
+    },
     onFailed() {},
     onShowPassword() {
-      this.isShowPassword = !this.isShowPassword;
+      if (this.isShowPassword) {
+        this.isShowPassword = false
+      } 
+      else {
+        this.isShowPassword = true
+      }
     },
     onShowPasswordConfirm() {
-      this.isShowPasswordConfirm = !this.isShowPasswordConfirm;
+      if (this.isShowPasswordConfirm) {
+        this.isShowPasswordConfirm = false
+      } else {
+        this.isShowPasswordConfirm = true
+      }
     },
-    validate() {},
-    validEmail(email) {}, 
-    validPassword(password) {},
-    matchPassword(password, password_confirmation) {},
+    validate() {
+      var vm = this
+
+      vm.validator.email.blured = true
+      vm.validator.password.blured = true
+      vm.validator.password_confirmation.blured = true
+
+      if (vm.validEmail(vm.form.email) && vm.validPassword(vm.form.password) && vm.matchPassword(vm.form.password, vm.form.password_confirmation)) {
+        return true
+      } else {
+        return false
+      }
+    },
+    validEmail(email) {
+      var vm = this
+
+      if (email == vm.validator.email.last) {
+        return
+      }
+      vm.validator.email.error = false
+      vm.validator.email.last = ''
+
+      var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      vm.validator.email.valid = re.test(email)
+
+      var isValid = re.test(email)
+      if (isValid) {
+        return true
+      } else {
+        vm.validator.email.valid = false
+        vm.validator.email.text = 'Please input a valid Email'
+        return false
+      }
+    }, 
+    validPassword(password) {
+      var vm = this
+      if (password.length < 6 || password.length > 12) {
+        vm.validator.password.valid = false
+        vm.validator.password.text = 'Password must be 6 ~ 12 length characters'
+        return false
+      } else if (!(/[a-z]/.test(password))) {
+        vm.validator.password.valid = false
+        vm.validator.password.text = 'Password must contain at least 1 lower case letter'
+        return false
+      } else if (!(/[A-Z]/.test(password))) {
+        vm.validator.password.valid = false
+        vm.validator.password.text = 'Password must contain at least 1 capital letter'
+        return false
+      } else if (!(/[0-9]/.test(password))) {
+        vm.validator.password.valid = false
+        vm.validator.password.text = 'Password must contain at least 1 number'
+        return false
+      } else if (!(/[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/.test(password))) {
+        vm.validator.password.valid = false
+        vm.validator.password.text = 'Password must contain at least 1 special character'
+        return false
+      }
+
+      return true
+    },
+    matchPassword(password, password_confirmation) {
+      var vm = this
+      if (password_confirmation.length < 6 || password_confirmation.length > 12) {
+        vm.validator.password_confirmation.valid = false
+        vm.validator.password_confirmation.text = 'Password must be 6 ~ 12 length characters'
+        return false
+      } else if (!(/[a-z]/.test(password_confirmation))) {
+        vm.validator.password_confirmation.valid = false
+        vm.validator.password_confirmation.text = 'Password must contain at least 1 lower case letter'
+        return false
+      } else if (!(/[A-Z]/.test(password_confirmation))) {
+        vm.validator.password_confirmation.valid = false
+        vm.validator.password_confirmation.text = 'Password must contain at least 1 capital letter'
+        return false
+      } else if (!(/[0-9]/.test(password_confirmation))) {
+        vm.validator.password_confirmation.valid = false
+        vm.validator.password_confirmation.text = 'Password must contain at least 1 number'
+        return false
+      } else if (!(/[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/.test(password_confirmation))) {
+        vm.validator.password_confirmation.valid = false
+        vm.validator.password_confirmation.text = 'Password must contain at least 1 special character'
+        return false
+      } else if (password !== password_confirmation) {
+        vm.validator.password_confirmation.valid = false;
+        vm.validator.password_confirmation.text = "Password doesn't match"
+        return false
+      }
+
+      return true
+    },
     toLogin() {
       this.$router.push({ name: 'Login' })
     },
