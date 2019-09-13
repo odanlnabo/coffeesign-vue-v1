@@ -242,9 +242,21 @@ const router = new Router({
   ]
 });
 
+// router.beforeEach((to, from, next) => {
+//   if(to.matched.some(record => record.meta.requiresAuth)) {
+//     if (store.getters.isLoggedIn) {
+//       next()
+//       return
+//     }
+//     next('/login')
+//   } else {
+//     next() 
+//   }
+// })
+
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!store.getters.loggedIn) {
+    if (!(store.getters.isLoggedIn)) {
       next({
         name: 'Login',
       })
@@ -252,7 +264,7 @@ router.beforeEach((to, from, next) => {
       next()
     }
   } else if (to.matched.some(record => record.meta.requiresVisitor)) {
-    if (store.getters.loggedIn) {
+    if (store.getters.isLoggedIn) {
       next({
         name: 'LandingPage',
       })

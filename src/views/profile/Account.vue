@@ -7,14 +7,14 @@
         <div class="user-happy">
           <img :src="selected_avatar" class="clickable-icon" v-on:click="changeAvatar()"/>
           <div class="ml-3">
-            <div class="user-name">{{ getName }}</div>
-            <span class="comments">{{ getEmail }}</span>
+            <div class="user-name">{{ getUser.name }}</div>
+            <span class="comments">{{ getUser.email }}</span>
             <div>
               <b-button variant="link" class="p-0 mt-3" v-on:click="changePassword()">Change Password</b-button>
             </div>
           </div>
         </div>
-        <div class="user-connection">
+        <div class="user-connection" hidden> 
           <div class="connect-social">Connect social networks</div>
           <div class="socials">
             <b-button variant="link" class="p-0">
@@ -35,6 +35,7 @@
       
       <div class="row">
         <div class="col-md-12">
+          <b-form @submit.prevent="onUpdateClient">
           <div class="content-card">
             <div class="content-header">
               <strong>Company & Job Title</strong>
@@ -54,7 +55,7 @@
                   <div
                     v-if="isError(form_data.first_name)"
                     class="error-text"
-                  >Please input Frist Name</div>
+                  >Please input First Name</div>
                 </div>
               </div>
               <div class="col-sm-6">
@@ -96,8 +97,8 @@
               </div>
               <div class="col-sm-6">
                 <UserSelect
-                  v-bind:value="form_data.employee"
-                  v-bind:items="[
+                  :value="form_data.employee"
+                  :items="[
                   'Employee',
                   '0-5',
                   '6-10',
@@ -176,6 +177,7 @@
             </div>
             <button v-on:click="getStarted()" class="btn btn-primary w-100">Update</button>
           </div>
+          </b-form>
         </div>
       </div>
     </div>
@@ -282,13 +284,20 @@ export default {
     UserSelect,
     VueCropper
   },
-  computed: {    
-    getName() {
-      return this.$store.state.auth.user.name
+  mounted() {
+    this.$store.dispatch('fetchClient', this.$store.state.auth.user.id);
+
+    this.defaultPurpose(this.$store.state.clients.data.purpose = this.$store.state.clients.data.purpose || 0);
+    this.defaultEmployee(this.$store.state.clients.data.company_size_id = this.$store.state.clients.data.company_size_id || 0);
+    this.defaultIndustry(this.$store.state.clients.data.industry_id = this.$store.state.clients.data.industry_id || 0);
+  },
+  computed: {
+    getUser: function() {
+      return this.$store.state.auth.user
     },
-    getEmail() {
-      return this.$store.state.auth.user.email
-    }
+    getClient: function() {
+      return this.$store.state.clients.client
+    },
   },
   data() {
     return {
@@ -306,17 +315,72 @@ export default {
       showNewConfirm: false,
       form_data: {
         error_flag: false,
-        first_name: "",
-        last_name: "",
+        first_name: this.$store.state.auth.user.first_name,
+        last_name: this.$store.state.auth.user.last_name,
         purpose: "Purpose of using",
-        company: "",
+        company: this.$store.state.clients.data.company_name,
         employee: "Employee",
-        title: "",
+        title: this.$store.state.clients.data.title,
         industry: "Select Industry"
-      }
+      },
+      itemPurpose: ['Purpose of using', 'My Personnel use', 'My Business'],
+      itemEmployee: ['Employee', '0-5', '6-10', '11-20', '21-50', '51-100', '101-300', '301-1000', 'More then 1000'],
+      itemIndustry: [
+                    'Select Industry',
+                    'Accounting &amp; Tax Accounting',
+                    'Business Services / Consulting Business Services',
+                    'Construction - General Construction',
+                    'Construction - Home Builder Real Estate - Construction',
+                    'Debt Settlement Debt Settlement/Loan Modification',
+                    'Education Education',
+                    'Financial Services - Banking Banking',
+                    'Financial Services - Credit Unions Credit Unions',
+                    'Financial Services - Other Financial Services',
+                    'Financial Services - Wealth &amp; Asset Management Wealth Management',
+                    'Government - City Government - City',
+                    'Government - County Government - County',
+                    'Government - Federal Government - National',
+                    'Government - State Government - State',
+                    'Healthcare - Health Plans &amp; Payers Insurance - Health',
+                    'Healthcare - Providers Healthcare - Providers',
+                    'HR Staffing HR Staffing',
+                    'Insurance - Agents / Brokers Insurance - Agency',
+                    'Insurance - Carriers Insurance - Carriers',
+                    'Legal Legal',
+                    'Life Sciences - Medical Devices Life Sciences - Medical Devices',
+                    'Life Sciences - Other Life Sciences - Other',
+                    'Life Sciences - Pharmaceuticals Life Sciences - Pharmaceuticals',
+                    'Life Sciences - Wholesale Distributors Life Sciences - Wholesale/Distributor',
+                    'Manufacturing',
+                    'Mortgage Broker Real Estate - Mortgage',
+                    'Not For Profit',
+                    'Real Estate - Agent Real Estate - Agent',
+                    'Real Estate - Broker/Owner Real Estate - Broker/Owner',
+                    'Real Estate - Commercial Real Estate - Commercial',
+                    'Real Estate - Property Management Real Estate - Property Management',
+                    'Retail Retail',
+                    'Sports &amp; Entertainment Travel &amp; Leisure',
+                    'Technology - General Technology',
+                    'Technology - Startup Technology',
+                    'Telecommunications',
+                    'Other'],
+
     };
   },
-  methods: {  
+  methods: {    
+    defaultPurpose: function(index) {
+      var items = this.itemPurpose;
+      this.form_data.purpose = items[index];
+    },
+    defaultEmployee: function(index) {
+      var items = this.itemEmployee;
+      this.form_data.employee = items[index];
+    },
+    defaultIndustry: function(index) {
+      var items = this.itemIndustry;
+      this.form_data.industry = items[index];
+    },
+
     changeAvatarImg() {
       this.$refs.avatar_file.click();
     },
@@ -342,6 +406,7 @@ export default {
       this.$refs['change-avatar-modal'].show();
     },
     changePassword() {
+      console.log(this)
       this.$refs['change-password-modal'].show();
     },
     cancelAvatar() {
@@ -361,6 +426,24 @@ export default {
     },
     changeEmployeeValue(e) {
       this.form_data.employee = e;
+    },
+    onUpdateClient: function() {
+      let first_name = this.form_data.first_name
+      let last_name = this.form_data.last_name
+      this.$store.dispatch('updateUser', { id: this.$store.state.auth.user.id, first_name, last_name })
+      .then(() => {
+        let purpose = this.itemPurpose.indexOf(this.form_data.purpose)
+        let company = this.form_data.company
+        let employee = this.itemEmployee.indexOf(this.form_data.employee)
+        let title = this.form_data.title
+        let industry = this.itemIndustry.indexOf(this.form_data.industry)
+        this.$store.dispatch('updateClient', { id: this.$store.state.clients.data.id, purpose, company, employee, title, industry })
+        .then(() => {
+          this.$router.go()
+        })
+        .catch(err => console.log(err))
+      })
+      .catch(err => console.log(err))
     },
     isError(value) {
       return (

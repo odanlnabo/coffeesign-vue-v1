@@ -15,10 +15,10 @@ export default {
     UserIcon
   },
   methods: {
-    logout() {      
-      this.$store.dispatch('destroyToken')
-        .then(response => {
-          this.$router.push({ name: 'Login' })
+    logout: function() {      
+      this.$store.dispatch('logout')
+        .then(() => {
+          this.$router.push('/login')
         })
     }
   }

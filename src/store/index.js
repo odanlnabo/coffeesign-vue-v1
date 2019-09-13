@@ -3,7 +3,7 @@ import Vuex from 'vuex';
 // modules need to be import
 // import users from './modules/users';
 import auth from './modules/auth';
-import users from './modules/users';
+import clients from './modules/clients';
 import documents from './modules/documents';
 
 // Load Vuex
@@ -13,7 +13,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   modules: {
     auth,
-    users,
+    clients,
     documents
   }
 });

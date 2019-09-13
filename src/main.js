@@ -6,9 +6,10 @@ import Vue from 'vue'
 import BootstrapVue from 'bootstrap-vue'
 import App from './App'
 import router from './router'
+import axios from 'axios'
 
 // implement Vuex Store in main application
-import store from './store';
+import store from './store'
 
 // todo
 // cssVars()
@@ -44,6 +45,14 @@ library.add(faYoutubeSquare)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 // End FortAwesome Vue
+
+// Vue Authentication Header
+Vue.prototype.$http = axios;
+const token = localStorage.getItem('token')
+if (token) {
+  Vue.prototype.$http.defaults.headers.common['Authorization'] = "Bearer " + token
+}
+// End Vue Authentication Header
 
 /* eslint-disable no-new */
 new Vue({

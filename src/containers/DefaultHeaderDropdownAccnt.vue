@@ -29,7 +29,7 @@
         <b-dropdown-item v-on:click="gotoPage('/profile')">
           <i class="fa fa-user" /> Profile
         </b-dropdown-item>
-        <b-dropdown-item v-on:click="gotoPage('/login')">
+        <b-dropdown-item v-on:click="logout">
           <i class="fa fa-sign-out" /> Logout
         </b-dropdown-item>
       </template>
@@ -44,6 +44,11 @@ export default {
   components: {
     AppHeaderDropdown
   },
+  mounted() {    
+    if (Object.keys(this.$store.state.auth.user).length === 0) {
+      this.$store.dispatch('authUser')
+    }
+  },
   data: () => {
     return {
       itemsCount: 42,
@@ -53,6 +58,12 @@ export default {
   methods: {
     gotoPage(url) {
       this.$router.push({ path: url });
+    },
+    logout: function() {      
+      this.$store.dispatch('logout')
+        .then(() => {
+          this.$router.push('/login')
+        })
     }
   }
 };

@@ -1,97 +1,119 @@
-import axios from 'axios';
+import axios from 'axios'
 
-axios.defaults.baseURL = 'http://desktop-b8avdn9/api';
-axios.defaults.headers.common['Accept'] = "application/json";
-axios.defaults.headers.common['Authorization'] = "Bearer " + localStorage.getItem('access_token');
+axios.defaults.baseURL = 'http://desktop-b8avdn9/api'
 
 const state = {
-  token: localStorage.getItem('access_token'),
-  authentication: localStorage.getItem('authentication'),
-  user: {},
-};
+  status: '',
+  token: localStorage.getItem('token') || '',
+  user: {}
+}
 
-const getters = {
-  loggedIn(state) {
-    return state.token !== null;
+const mutations = {
+  auth_request: function(state) {
+    state.status = 'loading...'
   },
-  currentUser: state => state.user,
-};
+  auth_user: function(state, user) {
+    state.status = 'success',
+    state.user = user
+  },
+  auth_success: function(state, token) {
+    state.status = 'loading...'
+    state.token = token
+  },
+  auth_error: function(state) {
+    state.status = 'error'
+  },
+  logout(state) {
+    state.status = '',
+    state.token = '',
+    state.user = {}
+  },
+
+  update_user: function(state, msg) {
+    state.status = ''
+  }
+}
 
 const actions = {
   // Login Request
-  async retrieveToken(context, credentials) {   
-    // Login Success 
-    async function retrieveUser(context){
-      await axios.get('/user')
-        .then(response => {
-          context.commit('retrieveUser', response.data)
-          console.log(response.data)
-        })
-        .catch(error => {
-          console.log(error)
-        })
-    }
-
-    await axios.post('/auth/login', credentials)
-      .then(response => {
-        const token = response.data.access_token;
-
-        localStorage.setItem('access_token', token);
-        context.commit('retrieveToken', token);
-
-        retrieveUser(context);
-
-        console.log(response.data);
+  login(context, user) {
+    return new Promise((resolve, reject) => {
+      context.commit('auth_request')
+      axios.post('/auth/login', user)
+      .then(resp => {
+        const token = resp.data.access_token
+        localStorage.setItem('token', token)
+        axios.defaults.headers.common['Authorization'] = "Bearer " + token     
+        context.commit('auth_success', token)
       })
-      .catch(error => {
-        console.log(error);
+      // Login Success
+      .then(() => {
+        context.dispatch('authUser')
+        resolve()
       })
+      .catch(err => {
+        context.commit('auth_error')
+        localStorage.removeItem('token')
+        reject(err)
+      })
+    })
   },
 
-  // Logout
-  destroyToken(context) {
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + context.state.token
+  authUser({commit}) {
+    return new Promise((resolve, reject) => {
+      axios.get('/user')
+      .then(resp => {
+        commit('auth_user', resp.data)
+        resolve(resp)
+      })
+      .catch(err => {
+        commit('auth_error')
+        localStorage.removeItem('token')
+        reject(err)
+      })
+    })
+  },
 
-    if (context.getters.loggedIn) {
-      localStorage.removeItem('access_token')
-      context.commit('destroyToken')
-      // return new Promise((resolve, reject) => {
-      //   axios.get('/api/auth/logout')
-      //     .then(response => {
-      //       localStorage.removeItem('access_token')
-      //       context.commit('destroyToken')
-      //       console.log(response)
-      //       resolve(response)
-      //       // context.commit('addTodo', response.data)
-      //     })
-      //     .catch(error => {
-      //       localStorage.removeItem('access_token')
-      //       context.commit('destroyToken')
-      //       reject(error)
-      //     })
-      // })
-    }
+  logout({commit}) {
+    return new Promise((resolve, reject) => {
+      commit('logout')
+      localStorage.removeItem('token')     
+      delete axios.defaults.headers.common['Authorization']
+      resolve()
+    })
+  },
+
+  // Update User
+  updateUser: function(context, user) {
+    return new Promise((resolve, reject) => {
+      console.log(user)
+      const data = new FormData();      
+      data.append('_method', 'PUT');
+      data.append('first_name', user.first_name);
+      data.append('last_name', user.last_name);
+      axios.post(`/auth/user/${user.id}`, data)
+      .then(resp => {
+        context.commit('update_user', resp)
+        context.dispatch('authUser')
+        resolve(resp)
+      })
+      .catch(err => {
+        console.log(err)
+        reject(err)
+      })
+    })
   }
-};
+}
 
-const mutations = {
-  retrieveToken(state, token) {
-    state.token = token;
-  },
-
-  retrieveUser(state, user) {
-    state.user = user;
-  },
-
-  destroyToken(state) {
-    state.token = null;
-    state.user = {};
-  }
-};
+const getters = {
+  isLoggedIn: state => !!state.token,
+  authStatus: state => state.status,
+  userInfo: state => state.user
+}
 
 export default {
   state,
-  getters,
+  mutations,
   actions,
-  mutations
+  getters
 }

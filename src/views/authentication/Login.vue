@@ -125,15 +125,26 @@ export default {
 
   },
   methods: {
-    onLogin() {
-      this.$store.dispatch('retrieveToken', {
-        email: this.form.email,
-        password: this.form.password,
-        remember_me: this.form.remember_me
-      })
-        .then(response => {
-          this.$router.push({ name: 'LandingPage' })
-        }) 
+    onLogin: function() {
+      let email = this.form.email
+      let password = this.form.password
+      let remember_me = this.form.remember_me
+
+      this.$store.dispatch('login', { email, password, remember_me })
+       .then(() => this.$router.push({ name: 'LandingPage' }))
+       .catch(err => console.log(err))
+
+      // this.$store.dispatch('retrieveToken', {
+      //   email: this.form.email,
+      //   password: this.form.password,
+      //   remember_me: this.form.remember_me
+      // })
+      //   .then(response => {
+      //     this.$router.push({ name: 'LandingPage' })
+      //   })
+      //   .catch(error => {
+      //     console.log(error)
+      //   })
     },
     onShowPassword() {
       if (this.isShowPassword) {
